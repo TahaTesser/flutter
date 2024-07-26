@@ -322,6 +322,7 @@ class _MenuAnchorState extends State<MenuAnchor> {
   bool get _isRoot => _parent == null;
   bool get _isTopLevel => _parent?._isRoot ?? false;
   MenuController get _menuController => widget.controller ?? _internalMenuController!;
+  final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
@@ -391,14 +392,19 @@ class _MenuAnchorState extends State<MenuAnchor> {
     Widget child = OverlayPortal(
       controller: _overlayController,
       overlayChildBuilder: (BuildContext context) {
-       return _Submenu(
-          anchor: this,
-          menuStyle: widget.style,
-          alignmentOffset: widget.alignmentOffset ?? Offset.zero,
-          menuPosition: _menuPosition,
-          clipBehavior: widget.clipBehavior,
-          menuChildren: widget.menuChildren,
-          crossAxisUnconstrained: widget.crossAxisUnconstrained,
+        return CompositedTransformFollower(
+          link: _layerLink,
+          targetAnchor: Alignment.center,
+          followerAnchor: Alignment.center,
+          child: _Submenu(
+            anchor: this,
+            menuStyle: widget.style,
+            alignmentOffset: widget.alignmentOffset ?? Offset.zero,
+            menuPosition: _menuPosition,
+            clipBehavior: widget.clipBehavior,
+            menuChildren: widget.menuChildren,
+            crossAxisUnconstrained: widget.crossAxisUnconstrained,
+          ),
         );
       },
       child: _buildContents(context),
@@ -416,11 +422,14 @@ class _MenuAnchorState extends State<MenuAnchor> {
       );
     }
 
-    return _MenuAnchorScope(
-      anchorKey: _anchorKey,
-      anchor: this,
-      isOpen: _isOpen,
-      child: child,
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: _MenuAnchorScope(
+        anchorKey: _anchorKey,
+        anchor: this,
+        isOpen: _isOpen,
+        child: child,
+      ),
     );
   }
 
