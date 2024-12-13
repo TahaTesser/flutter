@@ -2516,6 +2516,45 @@ void main() {
     expect(trailingOffset.dy - tileOffset.dy, topPosition);
   });
 
+  testWidgets('Leading/Trailing exceeding list tile width throws exception', (WidgetTester tester) async {
+    Widget buildListTile({
+      Widget? leading,
+      Widget? trailing,
+    }) {
+      return MaterialApp(
+        home: Material(
+          child: Center(
+            child: SizedBox(
+              width: 100,
+              child: ListTile(
+                leading: leading,
+                trailing: trailing,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Test a trailing widget that exceeds the list tile width.
+    // 16 (content padding) + 61 (leading width) + 24 (content padding) = 101.
+    // List tile width is 100 as a result, an exception should be thrown.
+    await tester.pumpWidget(buildListTile(
+      leading: const SizedBox(width: 61),
+    ));
+
+    expect(tester.takeException(), isNotNull); // Error message cannot be as there too many errors thrown.
+
+   // Test a trailing widget that exceeds the list tile width.
+    // 16 (content padding) + 61 (trailing width) + 24 (content padding) = 101.
+    // List tile width is 100 as a result, an exception should be thrown.
+    await tester.pumpWidget(buildListTile(
+      trailing: const SizedBox(width: 61),
+    ));
+
+    expect(tester.takeException(), isNotNull); // Error message cannot be as there too many errors thrown.
+  });
+
   group('Material 2', () {
     // These tests are only relevant for Material 2. Once Material 2
     // support is deprecated and the APIs are removed, these tests
