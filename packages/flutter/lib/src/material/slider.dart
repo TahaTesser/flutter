@@ -871,12 +871,20 @@ class _SliderState extends State<Slider> with TickerProviderStateMixin {
       );
     }
 
+    final Color? effectiveActiveTrackColor =
+        widget.activeColor ?? sliderTheme.activeTrackColor ?? defaults.activeTrackColor;
+    final Color? effectiveInactiveColor =
+        widget.inactiveColor ?? sliderTheme.inactiveTrackColor ?? defaults.inactiveTrackColor;
+    final double? effectiveTrackHeight =
+        effectiveActiveTrackColor != Colors.transparent &&
+                effectiveInactiveColor != Colors.transparent
+            ? sliderTheme.trackHeight ?? defaults.trackHeight
+            : 0;
+
     sliderTheme = sliderTheme.copyWith(
-      trackHeight: sliderTheme.trackHeight ?? defaults.trackHeight,
-      activeTrackColor:
-          widget.activeColor ?? sliderTheme.activeTrackColor ?? defaults.activeTrackColor,
-      inactiveTrackColor:
-          widget.inactiveColor ?? sliderTheme.inactiveTrackColor ?? defaults.inactiveTrackColor,
+      trackHeight: effectiveTrackHeight,
+      activeTrackColor: effectiveActiveTrackColor,
+      inactiveTrackColor: effectiveInactiveColor,
       secondaryActiveTrackColor:
           widget.secondaryActiveColor ??
           sliderTheme.secondaryActiveTrackColor ??
@@ -1740,8 +1748,7 @@ class _RenderSlider extends RenderBox with RelayoutWhenSystemFontsChangeMixin {
       sliderTheme: _sliderTheme,
       isDiscrete: isDiscrete,
     );
-    final double padding =
-        isDiscrete || _sliderTheme.trackShape!.isRounded ? trackRect.height : 0.0;
+    final double padding = _sliderTheme.trackShape!.isRounded ? trackRect.height : 0.0;
     final double thumbPosition =
         isDiscrete
             ? trackRect.left + visualPosition * (trackRect.width - padding) + padding / 2
