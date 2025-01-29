@@ -873,18 +873,18 @@ class _SliderState extends State<Slider> with TickerProviderStateMixin {
 
     final Color? effectiveActiveTrackColor =
         widget.activeColor ?? sliderTheme.activeTrackColor ?? defaults.activeTrackColor;
-    final Color? effectiveInactiveColor =
+    final Color? effectiveInactiveTrackColor =
         widget.inactiveColor ?? sliderTheme.inactiveTrackColor ?? defaults.inactiveTrackColor;
     final double? effectiveTrackHeight =
         effectiveActiveTrackColor != Colors.transparent &&
-                effectiveInactiveColor != Colors.transparent
+                effectiveInactiveTrackColor != Colors.transparent
             ? sliderTheme.trackHeight ?? defaults.trackHeight
             : 0;
 
     sliderTheme = sliderTheme.copyWith(
       trackHeight: effectiveTrackHeight,
       activeTrackColor: effectiveActiveTrackColor,
-      inactiveTrackColor: effectiveInactiveColor,
+      inactiveTrackColor: effectiveInactiveTrackColor,
       secondaryActiveTrackColor:
           widget.secondaryActiveColor ??
           sliderTheme.secondaryActiveTrackColor ??
