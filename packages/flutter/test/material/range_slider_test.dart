@@ -2810,4 +2810,83 @@ void main() {
 
     semantics.dispose();
   }, semanticsEnabled: false);
+
+  // Regression test for https://github.com/flutter/flutter/issues/161210
+  testWidgets(
+    'RangeSlider with transparent track colors and custom track height can reach extreme ends',
+    (WidgetTester tester) async {
+      const double sliderPadding = 24.0;
+      final ThemeData theme = ThemeData(
+        sliderTheme: const SliderThemeData(
+          trackHeight: 100,
+          activeTrackColor: Colors.transparent,
+          inactiveTrackColor: Colors.transparent,
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: Material(
+            child: SizedBox(
+              width: 300,
+              child: RangeSlider(
+                values: const RangeValues(0, 1),
+                onChanged: (RangeValues values) {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final MaterialInkController material = Material.of(tester.element(find.byType(RangeSlider)));
+
+      expect(
+        material,
+        paints
+          ..circle(x: sliderPadding, y: 300.0, color: theme.colorScheme.primary)
+          ..circle(x: 800.0 - sliderPadding, y: 300.0, color: theme.colorScheme.primary),
+      );
+    },
+  );
+
+  // Regression test for hhttps://github.com/flutter/flutter/issues/161805
+  testWidgets('Discrete RangeSlider does not apply thumb padding in a non-rounded track shape', (
+    WidgetTester tester,
+  ) async {
+    const double sliderPadding = 24.0;
+    final ThemeData theme = ThemeData(
+      sliderTheme: const SliderThemeData(
+        // Thumb padding is applied based on the track height.
+        trackHeight: 100,
+        rangeTrackShape: RectangularRangeSliderTrackShape(),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: theme,
+        home: Material(
+          child: SizedBox(
+            width: 300,
+            child: RangeSlider(
+              values: const RangeValues(0, 100),
+              max: 100,
+              divisions: 100,
+              onChanged: (RangeValues values) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final MaterialInkController material = Material.of(tester.element(find.byType(RangeSlider)));
+
+    expect(
+      material,
+      paints
+        ..circle(x: sliderPadding, y: 300.0, color: theme.colorScheme.primary)
+        ..circle(x: 800.0 - sliderPadding, y: 300.0, color: theme.colorScheme.primary),
+    );
+  });
 }

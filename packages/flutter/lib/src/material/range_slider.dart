@@ -23,6 +23,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
 import 'package:flutter/widgets.dart';
 
+import 'colors.dart';
 import 'constants.dart';
 import 'debug.dart';
 import 'material_state.dart';
@@ -656,14 +657,22 @@ class _RangeSliderState extends State<RangeSlider> with TickerProviderStateMixin
           theme.colorScheme.primary.withOpacity(0.12);
     }
 
+    final Color effectiveActiveTrackColor =
+        widget.activeColor ?? sliderTheme.activeTrackColor ?? theme.colorScheme.primary;
+    final Color effectiveInactiveTrackColor =
+        widget.inactiveColor ??
+        sliderTheme.inactiveTrackColor ??
+        theme.colorScheme.primary.withOpacity(0.24);
+    final double effectiveTrackHeight =
+        effectiveActiveTrackColor != Colors.transparent &&
+                effectiveInactiveTrackColor != Colors.transparent
+            ? sliderTheme.trackHeight ?? defaultTrackHeight
+            : 0;
+
     sliderTheme = sliderTheme.copyWith(
-      trackHeight: sliderTheme.trackHeight ?? defaultTrackHeight,
-      activeTrackColor:
-          widget.activeColor ?? sliderTheme.activeTrackColor ?? theme.colorScheme.primary,
-      inactiveTrackColor:
-          widget.inactiveColor ??
-          sliderTheme.inactiveTrackColor ??
-          theme.colorScheme.primary.withOpacity(0.24),
+      trackHeight: effectiveTrackHeight,
+      activeTrackColor: effectiveActiveTrackColor,
+      inactiveTrackColor: effectiveInactiveTrackColor,
       disabledActiveTrackColor:
           sliderTheme.disabledActiveTrackColor ?? theme.colorScheme.onSurface.withOpacity(0.32),
       disabledInactiveTrackColor:
@@ -1466,8 +1475,7 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
       sliderTheme: _sliderTheme,
       isDiscrete: isDiscrete,
     );
-    final double padding =
-        isDiscrete || _sliderTheme.rangeTrackShape!.isRounded ? trackRect.height : 0.0;
+    final double padding = _sliderTheme.rangeTrackShape!.isRounded ? trackRect.height : 0.0;
     final double thumbYOffset = trackRect.center.dy;
     final double startThumbPosition =
         isDiscrete
