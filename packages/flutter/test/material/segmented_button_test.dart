@@ -1268,6 +1268,7 @@ void main() {
     final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer();
     await gesture.moveTo(buttonLocation);
+    addTearDown(gesture.removePointer);
     await tester.pumpAndSettle();
 
     expect(find.byType(SegmentedButton<int>), paints..rrect(color: hoveredColor));
