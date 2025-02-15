@@ -4430,3 +4430,203 @@ class _RoundedRectSliderValueIndicatorPathPainter {
     canvas.restore();
   }
 }
+
+///
+class GappedRangeSliderTrackShape extends RangeSliderTrackShape with BaseRangeSliderTrackShape {
+  ///
+  const GappedRangeSliderTrackShape();
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset offset, {
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required Animation<double> enableAnimation,
+    required Offset startThumbCenter,
+    required Offset endThumbCenter,
+    bool isEnabled = false,
+    bool isDiscrete = false,
+    required TextDirection textDirection,
+    double additionalActiveTrackHeight = 2,
+  }) {
+    assert(sliderTheme.disabledActiveTrackColor != null);
+    assert(sliderTheme.disabledInactiveTrackColor != null);
+    assert(sliderTheme.activeTrackColor != null);
+    assert(sliderTheme.inactiveTrackColor != null);
+    assert(sliderTheme.rangeThumbShape != null);
+
+    if (sliderTheme.trackHeight == null || sliderTheme.trackHeight! <= 0) {
+      return;
+    }
+
+    // Assign the track segment paints, which are left: active, right: inactive,
+    // but reversed for right to left text.
+    final ColorTween activeTrackColorTween = ColorTween(
+      begin: sliderTheme.disabledActiveTrackColor,
+      end: sliderTheme.activeTrackColor,
+    );
+    final ColorTween inactiveTrackColorTween = ColorTween(
+      begin: sliderTheme.disabledInactiveTrackColor,
+      end: sliderTheme.inactiveTrackColor,
+    );
+
+    final Paint activePaint = Paint()..color = activeTrackColorTween.evaluate(enableAnimation)!;
+    final Paint inactivePaint = Paint()..color = inactiveTrackColorTween.evaluate(enableAnimation)!;
+
+    final Rect trackRect = getPreferredRect(
+      parentBox: parentBox,
+      offset: offset,
+      sliderTheme: sliderTheme,
+      isEnabled: isEnabled,
+      isDiscrete: isDiscrete,
+    );
+
+    final Radius trackCornerRadius = Radius.circular(trackRect.shortestSide / 2);
+    const Radius trackInsideCornerRadius = Radius.circular(2.0);
+
+    final (Offset leftThumbOffset, Offset rightThumbOffset) = switch (textDirection) {
+      TextDirection.ltr => (startThumbCenter, endThumbCenter),
+      TextDirection.rtl => (endThumbCenter, startThumbCenter),
+    };
+
+    final Size thumbSize = sliderTheme.rangeThumbShape!.getPreferredSize(isEnabled, isDiscrete);
+    final double thumbRadius = thumbSize.width / 2;
+    assert(thumbRadius > 0);
+    // Gap, starting from the middle of the thumb.
+    final double trackGap = sliderTheme.trackGap!;
+
+    final RRect trackRRect = RRect.fromRectAndCorners(
+      trackRect,
+      topLeft: trackCornerRadius,
+      bottomLeft: trackCornerRadius,
+      topRight: trackCornerRadius,
+      bottomRight: trackCornerRadius,
+    );
+
+    context.canvas
+      ..save()
+      ..clipRRect(trackRRect);
+    context.canvas.drawRRect(
+      RRect.fromLTRBAndCorners(
+        trackRect.left,
+        trackRect.top,
+        leftThumbOffset.dx - trackGap,
+        trackRect.bottom,
+        topLeft: trackCornerRadius,
+        bottomLeft: trackCornerRadius,
+        topRight: trackInsideCornerRadius,
+        bottomRight: trackInsideCornerRadius,
+      ),
+      inactivePaint,
+    );
+    context.canvas.drawRRect(
+      RRect.fromLTRBAndCorners(
+        rightThumbOffset.dx + trackGap,
+        trackRect.top,
+        trackRect.right,
+        trackRect.bottom,
+        topLeft: trackInsideCornerRadius,
+        bottomLeft: trackInsideCornerRadius,
+        topRight: trackCornerRadius,
+        bottomRight: trackCornerRadius,
+      ),
+      inactivePaint,
+    );
+
+    if (leftThumbOffset.dx + trackGap < rightThumbOffset.dx - trackGap) {
+      context.canvas.drawRRect(
+        RRect.fromLTRBR(
+          leftThumbOffset.dx + trackGap,
+          trackRect.top,
+          rightThumbOffset.dx - trackGap,
+          trackRect.bottom,
+          trackInsideCornerRadius,
+        ),
+        activePaint,
+      );
+    }
+
+    context.canvas.restore();
+
+    const double stopIndicatorRadius = 2.0;
+    final double stopIndicatorTrailingSpace = sliderTheme.trackHeight! / 2;
+    final Offset startStopIndicatorOffset = Offset(
+      trackRect.centerLeft.dx + stopIndicatorTrailingSpace,
+      trackRect.center.dy,
+    );
+    final Offset endStopIndicatorOffset = Offset(
+      trackRect.centerRight.dx - stopIndicatorTrailingSpace,
+      trackRect.center.dy,
+    );
+
+    final bool showStartStopIndicator = startThumbCenter.dx > startStopIndicatorOffset.dx;
+    if (showStartStopIndicator && !isDiscrete) {
+      final Rect stopIndicatorRect = Rect.fromCircle(
+        center: startStopIndicatorOffset,
+        radius: stopIndicatorRadius,
+      );
+      context.canvas.drawCircle(stopIndicatorRect.center, stopIndicatorRadius, activePaint);
+    }
+
+    final bool showEndStopIndicator = endThumbCenter.dx < endStopIndicatorOffset.dx;
+    if (showEndStopIndicator && !isDiscrete) {
+      final Rect stopIndicatorRect = Rect.fromCircle(
+        center: endStopIndicatorOffset,
+        radius: stopIndicatorRadius,
+      );
+      context.canvas.drawCircle(stopIndicatorRect.center, stopIndicatorRadius, activePaint);
+    }
+  }
+
+  @override
+  bool get isRounded => true;
+}
+
+///
+class HandleRangeSliderThumbShape extends RangeSliderThumbShape {
+  ///
+  HandleRangeSliderThumbShape();
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return const Size(4.0, 44.0);
+  }
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    bool? isOnTop,
+    required SliderThemeData sliderTheme,
+    TextDirection? textDirection,
+    Thumb? thumb,
+    bool? isPressed,
+  }) {
+    assert(sliderTheme.showValueIndicator != null);
+    assert(sliderTheme.overlappingShapeStrokeColor != null);
+    assert(sliderTheme.disabledThumbColor != null);
+    assert(sliderTheme.thumbColor != null);
+    assert(sliderTheme.thumbSize != null);
+
+    final ColorTween colorTween = ColorTween(
+      begin: sliderTheme.disabledThumbColor,
+      end: sliderTheme.thumbColor,
+    );
+    final Color color = colorTween.evaluate(enableAnimation)!;
+    final Canvas canvas = context.canvas;
+
+    final Size thumbSize =
+        sliderTheme.thumbSize!.resolve(<MaterialState>{})!; // This is resolved in the paint method.
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: thumbSize.width, height: thumbSize.height),
+      Radius.circular(thumbSize.shortestSide / 2),
+    );
+
+    canvas.drawRRect(rrect, Paint()..color = color);
+  }
+}
