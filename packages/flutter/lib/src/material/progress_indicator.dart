@@ -143,9 +143,10 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
     required this.animationValue,
     required this.textDirection,
     required this.indicatorBorderRadius,
-    required this.stopIndicatorColor,
-    required this.stopIndicatorRadius,
-    required this.trackGap,
+    this.stopIndicatorColor,
+    this.stopIndicatorRadius,
+    this.trackGap,
+    required this.year2023,
   });
 
   final Color trackColor;
@@ -157,6 +158,7 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
   final Color? stopIndicatorColor;
   final double? stopIndicatorRadius;
   final double? trackGap;
+  final bool year2023;
 
   // The indeterminate progress animation displays two lines whose leading (head)
   // and trailing (tail) endpoints are defined by the following four curves.
@@ -183,40 +185,6 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double effectiveTrackGap = switch (value) {
-      null || 1.0 => 0.0,
-      _ => trackGap ?? 0.0,
-    };
-
-    final Rect trackRect;
-    if (value != null && effectiveTrackGap > 0) {
-      trackRect = switch (textDirection) {
-        TextDirection.ltr => Rect.fromLTRB(
-          clampDouble(value!, 0.0, 1.0) * size.width + effectiveTrackGap,
-          0,
-          size.width,
-          size.height,
-        ),
-        TextDirection.rtl => Rect.fromLTRB(
-          0,
-          0,
-          size.width - clampDouble(value!, 0.0, 1.0) * size.width - effectiveTrackGap,
-          size.height,
-        ),
-      };
-    } else {
-      trackRect = Offset.zero & size;
-    }
-
-    // Draw the track.
-    final Paint trackPaint = Paint()..color = trackColor;
-    if (indicatorBorderRadius != null) {
-      final RRect trackRRect = indicatorBorderRadius!.resolve(textDirection).toRRect(trackRect);
-      canvas.drawRRect(trackRRect, trackPaint);
-    } else {
-      canvas.drawRect(trackRect, trackPaint);
-    }
-
     void drawStopIndicator() {
       // Limit the stop indicator radius to the height of the indicator.
       final double radius = math.min(stopIndicatorRadius!, size.height / 2);
@@ -228,9 +196,15 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
       canvas.drawCircle(position, radius, indicatorPaint);
     }
 
-    // Draw the stop indicator.
-    if (value != null && stopIndicatorRadius != null && stopIndicatorRadius! > 0) {
-      drawStopIndicator();
+    void drawInactiveIndicator(Rect trackRect) {
+      // Draw the track.
+      final Paint trackPaint = Paint()..color = trackColor;
+      if (indicatorBorderRadius != null) {
+        final RRect trackRRect = indicatorBorderRadius!.resolve(textDirection).toRRect(trackRect);
+        canvas.drawRRect(trackRRect, trackPaint);
+      } else {
+        canvas.drawRect(trackRect, trackPaint);
+      }
     }
 
     void drawActiveIndicator(double x, double width) {
@@ -252,8 +226,40 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
       }
     }
 
-    // Draw the active indicator.
     if (value != null) {
+      final Rect trackRect;
+      if (!year2023) {
+        final double effectiveTrackGap = switch (value) {
+          null || 1.0 => 0.0,
+          _ => trackGap ?? 0.0,
+        };
+        trackRect = switch (textDirection) {
+          TextDirection.ltr => Rect.fromLTRB(
+            clampDouble(value!, 0.0, 1.0) * size.width + effectiveTrackGap,
+            0,
+            size.width,
+            size.height,
+          ),
+          TextDirection.rtl => Rect.fromLTRB(
+            0,
+            0,
+            size.width - clampDouble(value!, 0.0, 1.0) * size.width - effectiveTrackGap,
+            size.height,
+          ),
+        };
+      } else {
+        trackRect = Offset.zero & size;
+      }
+
+      // Draw the inactive track.
+      drawInactiveIndicator(trackRect);
+
+      // Draw the stop indicator.
+      if (value != null && stopIndicatorRadius != null && stopIndicatorRadius! > 0) {
+        drawStopIndicator();
+      }
+
+      // Draw the active track.
       drawActiveIndicator(0.0, clampDouble(value!, 0.0, 1.0) * size.width);
     } else {
       final double x1 = size.width * line1Tail.transform(animationValue);
@@ -262,6 +268,24 @@ class _LinearProgressIndicatorPainter extends CustomPainter {
       final double x2 = size.width * line2Tail.transform(animationValue);
       final double width2 = size.width * line2Head.transform(animationValue) - x2;
 
+      final Rect track1 = Rect.fromLTRB(
+        width2 == 0 ? x1 + width1 : 0,
+        0,
+        width2 == 0 ? size.width : x2,
+        size.height,
+      );
+      final Rect track2 = Rect.fromLTRB(width2 == 0 ? 0 : x2 + width2, 0, x1, size.height);
+
+      // Draw the inactive tracks
+      drawInactiveIndicator(track1);
+      drawInactiveIndicator(track2);
+
+      // Draw the stop indicator.
+      if (value != null && stopIndicatorRadius != null && stopIndicatorRadius! > 0) {
+        drawStopIndicator();
+      }
+
+      // Draw the active tracks.
       drawActiveIndicator(x1, width1);
       drawActiveIndicator(x2, width2);
     }
@@ -507,6 +531,7 @@ class _LinearProgressIndicatorState extends State<LinearProgressIndicator>
           stopIndicatorColor: stopIndicatorColor,
           stopIndicatorRadius: stopIndicatorRadius,
           trackGap: trackGap,
+          year2023: year2023,
         ),
       ),
     );
