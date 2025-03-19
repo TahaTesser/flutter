@@ -2834,23 +2834,17 @@ void main() {
                 values = newValues;
               };
       return MaterialApp(
-        home: Directionality(
-          textDirection: TextDirection.ltr,
-          child: Material(
-            child: Center(
-              child: Theme(
-                data: theme,
-                child: RangeSlider(
-                  year2023: false,
-                  values: values,
-                  max: 100,
-                  labels: RangeLabels(
-                    values.start.round().toString(),
-                    values.end.round().toString(),
-                  ),
-                  divisions: divisions,
-                  onChanged: onChanged,
-                ),
+        home: Material(
+          child: Center(
+            child: Theme(
+              data: theme,
+              child: RangeSlider(
+                year2023: false,
+                values: values,
+                max: 100,
+                labels: RangeLabels(values.start.round().toString(), values.end.round().toString()),
+                divisions: divisions,
+                onChanged: onChanged,
               ),
             ),
           ),

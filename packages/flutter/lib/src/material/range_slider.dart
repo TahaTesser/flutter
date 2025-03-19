@@ -632,10 +632,10 @@ class _RangeSliderState extends State<RangeSlider> with TickerProviderStateMixin
     final ThemeData theme = Theme.of(context);
     SliderThemeData sliderTheme = SliderTheme.of(context);
     final bool year2023 = widget.year2023 ?? sliderTheme.year2023 ?? true;
-    final SliderThemeData defaults = switch (theme.useMaterial3 && !year2023) {
-      true => _RangeSliderDefaultsM3(context),
-      false => _RangeSliderDefaultsM2(context),
-    };
+    final SliderThemeData defaults =
+        theme.useMaterial3 && !year2023
+            ? _RangeSliderDefaultsM3(context)
+            : _RangeSliderDefaultsM2(context);
 
     // If the widget has active or inactive colors specified, then we plug them
     // in to the slider theme as best we can. If the developer wants more
@@ -1515,8 +1515,8 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
       overlayEndRect = Rect.fromCircle(center: _endThumbCenter, radius: overlaySize.width / 2.0);
     }
 
-    // If [Slider.year2023] is false, the thumb uses handle thumb shape and gapped track shape.
-    // The handle width and track gap are adjusted when the thumb is pressed.
+    // If [RangeSlider.year2023] is false, the thumbs uses handle thumb shape and gapped track shape.
+    // The handle width and track gaps are adjusted when the thumb is pressed.
     double? thumbWidth = _sliderTheme.thumbSize?.resolve(<MaterialState>{})?.width;
     final double? thumbHeight = _sliderTheme.thumbSize?.resolve(<MaterialState>{})?.height;
     double? trackGap = _sliderTheme.trackGap;
@@ -1525,9 +1525,7 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
     final double delta;
     if (_active && thumbWidth != null && pressedThumbWidth != null && trackGap != null) {
       delta = thumbWidth - pressedThumbWidth;
-      if (thumbWidth > 0.0) {
-        thumbWidth = pressedThumbWidth;
-      }
+      thumbWidth = pressedThumbWidth;
       if (trackGap > 0.0) {
         trackGap = trackGap - delta / 2;
       }
@@ -2099,7 +2097,7 @@ class _RangeSliderDefaultsM3 extends SliderThemeData {
   Color? get thumbColor => _colors.primary;
 
   @override
-  ui.Color? get overlappingShapeStrokeColor => _colors.surface;
+  Color? get overlappingShapeStrokeColor => _colors.surface;
 
   @override
   Color? get disabledThumbColor => _colors.onSurface.withOpacity(0.38);
